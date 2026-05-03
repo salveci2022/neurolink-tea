@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Escola — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Escola</div>
+      <a href="/dashboard/escola" class="sidebar-link active"><span class="sidebar-icon">🏫</span> Início</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span> Alunos</a>
+      <a href="/ia" class="sidebar-link"><span class="sidebar-icon">🤖</span> Assistente IA</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Painel Escolar</div>
+      <div class="page-sub">{{ hoje.strftime('%d/%m/%Y') }} · {{ current_user.tenant.nome }}</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" style="color:var(--teal)">{{ total_alunos }}</div><div class="stat-label">Alunos com TEA</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:{% if crises_hoje > 0 %}#993C1D{% else %}var(--teal){% endif %}">{{ crises_hoje }}</div><div class="stat-label">Crises hoje</div></div>
+      <div class="stat-card"><div class="stat-num">{{ professores }}</div><div class="stat-label">Professores</div></div>
+    </div>
+    {% if top_crises %}
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:500;margin-bottom:1rem">Alunos com mais crises esta semana</h3>
+      <table>
+        <thead><tr><th>Aluno</th><th>Crises</th></tr></thead>
+        <tbody>
+          {% for crianca, n in top_crises %}
+          <tr><td>{{ crianca.nome }}</td><td><span class="badge badge-coral">{{ n }}</span></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroLink TEA — Plataforma para Autismo</title>
+<style>
+  :root {
+    --teal: #0F6E56; --teal-light: #E1F5EE; --teal-mid: #1D9E75;
+    --text: #1a1a18; --text2: #5F5E5A; --bg: #fff; --bg2: #f8f7f3;
+    --border: rgba(0,0,0,0.08);
+    --font: -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); color: var(--text); background: var(--bg); }
+
+  /* NAV */
+  nav {
+    padding: 0 5%; height: 60px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 0.5px solid var(--border);
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo {
+    width: 34px; height: 34px; background: var(--teal); border-radius: 9px;
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+  }
+  .brand-name { font-size: 16px; font-weight: 600; color: var(--text); }
+  .brand-name span { color: var(--teal); }
+  .nav-btns { display: flex; gap: 8px; }
+  .btn-outline {
+    padding: 8px 18px; border-radius: 8px; border: 0.5px solid var(--border);
+    font-size: 13px; color: var(--text); text-decoration: none; background: var(--bg);
+  }
+  .btn-solid {
+    padding: 8px 18px; border-radius: 8px; background: var(--teal);
+    font-size: 13px; color: white; text-decoration: none; border: none;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0a4d3a 0%, #0F6E56 60%, #1D9E75 100%);
+    padding: 5rem 5% 4rem; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px; padding: 5px 16px;
+    font-size: 12px; color: rgba(255,255,255,0.85); margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+  .hero h1 { font-size: 3rem; font-weight: 700; color: white; line-height: 1.1; margin-bottom: 1rem; letter-spacing: -0.02em; }
+  .hero h1 span { color: #9FE1CB; }
+  .hero p { font-size: 1.1rem; color: rgba(255,255,255,0.75); max-width: 540px; margin: 0 auto 2.5rem; line-height: 1.7; }
+  .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-btn-primary {
+    padding: 14px 28px; background: white; color: var(--teal);
+    border-radius: 10px; font-size: 14px; font-weight: 600;
+    text-decoration: none; transition: opacity 0.15s;
+  }
+  .hero-btn-secondary {
+    padding: 14px 28px; background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px; font-size: 14px; color: white;
+    text-decoration: none;
+  }
+  .hero-stats {
+    display: flex; justify-content: center; gap: 3rem;
+    margin-top: 3rem; flex-wrap: wrap;
+  }
+  .hero-stat strong { display: block; font-size: 1.8rem; font-weight: 700; color: white; }
+  .hero-stat span { font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.05em; }
+
+  /* SEGMENTOS */
+  .section { padding: 4rem 5%; }
+  .section-title { text-align: center; font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .section-sub { text-align: center; color: var(--text2); font-size: 15px; margin-bottom: 2.5rem; }
+  .seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .seg-card {
+    border: 0.5px solid var(--border); border-radius: 14px;
+    padding: 1.5rem; transition: transform 0.15s;
+  }
+  .seg-card:hover { transform: translateY(-3px); }
+  .seg-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 1rem;
+  }
+  .seg-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .seg-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .seg-tag {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 100px; margin-top: 10px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  /* FEATURES */
+  .features-bg { background: var(--bg2); }
+  .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .feat-item { background: var(--bg); border-radius: 12px; padding: 1.2rem; border: 0.5px solid var(--border); }
+  .feat-icon { font-size: 24px; margin-bottom: 8px; }
+  .feat-item h4 { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .feat-item p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* CTA */
+  .cta-section {
+    background: linear-gradient(135deg, #0a4d3a, #0F6E56);
+    padding: 4rem 5%; text-align: center;
+  }
+  .cta-section h2 { font-size: 2rem; font-weight: 600; color: white; margin-bottom: 1rem; }
+  .cta-section p { color: rgba(255,255,255,0.7); margin-bottom: 2rem; font-size: 15px; }
+
+  /* FOOTER */
+  footer {
+    padding: 2rem 5%; border-top: 0.5px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--text2); flex-wrap: wrap; gap: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="brand">
+    <div class="logo">N</div>
+    <span class="brand-name">NeuroLink <span>TEA</span></span>
+  </a>
+  <div class="nav-btns">
+    <a href="/login" class="btn-outline">Entrar</a>
+    <a href="/registro" class="btn-solid">Começar grátis</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🧠 Plataforma SaaS para Autismo</div>
+  <h1>Cuidando de quem<br>cuida de <span>pessoas com TEA</span></h1>
+  <p>Ecossistema completo para famílias, escolas, clínicas e instituições que apoiam pessoas com Transtorno do Espectro Autista.</p>
+  <div class="hero-btns">
+    <a href="/registro" class="hero-btn-primary">Criar conta grátis</a>
+    <a href="/login" class="hero-btn-secondary">Já tenho conta</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><strong>2,4M</strong><span>AUTISTAS NO BRASIL</span></div>
+    <div class="hero-stat"><strong>4</strong><span>SEGMENTOS ATENDIDOS</span></div>
+    <div class="hero-stat"><strong>6</strong><span>MÓDULOS INTEGRADOS</span></div>
+    <div class="hero-stat"><strong>R$ 0</strong><span>PARA COMEÇAR</span></div>
+  </div>
+</section>
+
+<!-- SEGMENTOS -->
+<section class="section">
+  <div class="section-title">Para quem é o NeuroLink TEA?</div>
+  <div class="section-sub">Uma plataforma, quatro tipos de usuário, todos conectados.</div>
+  <div class="seg-grid">
+    <div class="seg-card" style="background:#E1F5EE">
+      <div class="seg-icon" style="background:#0F6E56">👨‍👩‍👧</div>
+      <h3>Famílias</h3>
+      <p>Rotina visual, comunicador alternativo, GPS em tempo real e alertas de crise para cuidar com mais tranquilidade.</p>
+      <span class="seg-tag" style="background:#0F6E56;color:white">R$ 49/mês</span>
+    </div>
+    <div class="seg-card" style="background:#E6F1FB">
+      <div class="seg-icon" style="background:#185FA5">🏫</div>
+      <h3>Escolas</h3>
+      <p>Painel do professor, gestão de alunos com TEA, comunicação com família via WhatsApp e relatórios automáticos.</p>
+      <span class="seg-tag" style="background:#185FA5;color:white">R$ 199/mês</span>
+    </div>
+    <div class="seg-card" style="background:#EEEDFE">
+      <div class="seg-icon" style="background:#534AB7">🩺</div>
+      <h3>Clínicas</h3>
+      <p>Prontuário digital, registro de sessões, laudos automáticos e IA especializada em estratégias ABA e TEACCH.</p>
+      <span class="seg-tag" style="background:#534AB7;color:white">R$ 99/mês</span>
+    </div>
+    <div class="seg-card" style="background:#FAEEDA">
+      <div class="seg-icon" style="background:#BA7517">🏛️</div>
+      <h3>Instituições</h3>
+      <p>Gestão de beneficiários, relatórios para órgãos públicos e integração de toda a rede de apoio da criança.</p>
+      <span class="seg-tag" style="background:#BA7517;color:white">R$ 399/mês</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features-bg">
+  <div class="section-title">Tudo que você precisa</div>
+  <div class="section-sub">6 módulos integrados em uma única plataforma</div>
+  <div class="feat-grid">
+    <div class="feat-item">
+      <div class="feat-icon">📅</div>
+      <h4>Rotina Visual</h4>
+      <p>Agenda com ícones, sons e avisos de transição personalizados.</p>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">💬</div>
+      <h4>Comunicador</h4>
+      <p>Pranchas de pictogramas com saída de voz para comunicação alternativa.</p>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">📍</div>
+      <h4>GPS em Tempo Real</h4>
+      <p>Localização e cerca virtual com alertas automáticos via WhatsApp.</p>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">🚨</div>
+      <h4>Modo Crise</h4>
+      <p>Tela calmante + notificação imediata para todos os responsáveis.</p>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">📋</div>
+      <h4>Prontuário Digital</h4>
+      <p>Registro de sessões e geração automática de laudos em PDF.</p>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">🤖</div>
+      <h4>IA Especializada</h4>
+      <p>Assistente com base em ABA, TEACCH e Denver para profissionais.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Comece hoje, gratuitamente</h2>
+  <p>Sem cartão de crédito. Configure em menos de 5 minutos.</p>
+  <a href="/registro" class="hero-btn-primary" style="display:inline-block">Criar minha conta grátis →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2025 NeuroLink TEA — SPYNET Tecnologia Forense & Soluções Digitais Ltda</span>
+  <span>CNPJ 64.000.808/0001-51 · Brasília-DF</span>
+</footer>
+
+</body>
+</html>

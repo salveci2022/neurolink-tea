@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — NeuroLink TEA</title>
+<style>
+  :root { --teal:#0F6E56;--teal-light:#E1F5EE;--text:#1a1a18;--text2:#5F5E5A;--bg:#fff;--bg2:#f8f7f3;--border:rgba(0,0,0,0.08);--font:-apple-system,'Segoe UI',sans-serif; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg2);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .box{background:var(--bg);border:0.5px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:400px}
+  .logo-wrap{text-align:center;margin-bottom:2rem}
+  .logo{width:48px;height:48px;background:var(--teal);border-radius:12px;color:white;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+  h1{font-size:1.3rem;font-weight:600;color:var(--text);text-align:center;margin-bottom:4px}
+  .sub{font-size:13px;color:var(--text2);text-align:center}
+  .field{margin-bottom:1rem}
+  label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:0.03em}
+  input[type=email],input[type=password]{width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none;transition:border-color 0.15s}
+  input:focus{border-color:var(--teal)}
+  .remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:1.2rem}
+  .btn{width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:opacity 0.15s;font-family:var(--font)}
+  .btn:hover{opacity:0.88}
+  .links{display:flex;justify-content:space-between;margin-top:1.2rem;font-size:13px}
+  .links a{color:var(--teal);text-decoration:none}
+  .alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;border:0.5px solid transparent}
+  .alert-danger{background:#FAECE7;color:#993C1D;border-color:#F5C4B3}
+  .alert-success{background:var(--teal-light);color:#085041;border-color:#9FE1CB}
+  .alert-warning{background:#FAEEDA;color:#BA7517;border-color:#FAC775}
+  .divider{text-align:center;font-size:12px;color:var(--text2);margin:1.2rem 0;position:relative}
+  .divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:0.5px;background:var(--border)}
+  .divider span{background:var(--bg);padding:0 10px;position:relative}
+  .btn-registro{width:100%;padding:11px;background:var(--bg2);color:var(--text);border:0.5px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:var(--font);text-align:center;text-decoration:none;display:block}
+  .demo-box{background:var(--bg2);border-radius:8px;padding:10px 12px;margin-top:1.2rem;font-size:12px;color:var(--text2);line-height:1.8}
+  .demo-box strong{color:var(--text);font-weight:500}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo-wrap">
+    <div class="logo">N</div>
+    <h1>NeuroLink TEA</h1>
+    <p class="sub">Entre na sua conta</p>
+  </div>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" action="/login">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <div class="field">
+      <label>E-MAIL</label>
+      <input type="email" name="email" value="{{ email or '' }}" placeholder="seu@email.com" required autofocus>
+    </div>
+    <div class="field">
+      <label>SENHA</label>
+      <input type="password" name="senha" placeholder="••••••••" required>
+    </div>
+    <div class="remember">
+      <input type="checkbox" name="lembrar" id="lembrar">
+      <label for="lembrar" style="margin:0;font-size:13px">Manter conectado</label>
+    </div>
+    <button type="submit" class="btn">Entrar →</button>
+  </form>
+
+  <div class="links">
+    <a href="/esqueci-senha">Esqueci minha senha</a>
+    <a href="/">← Voltar</a>
+  </div>
+
+  <div class="divider"><span>ou</span></div>
+  <a href="/registro" class="btn-registro">Criar nova conta grátis</a>
+
+  <div class="demo-box">
+    <strong>Contas de demonstração:</strong><br>
+    ana@exemplo.com / senha123 (família)<br>
+    joao@escola.com / senha123 (escola)<br>
+    mariana@clinica.com / senha123 (clínica)<br>
+    admin@neurolink.com.br / admin@NL2025!
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Nova Criança — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Família</div>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Início</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span> Crianças</a>
+      <a href="/rotinas" class="sidebar-link"><span class="sidebar-icon">📅</span> Rotinas</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Cadastrar Criança</div>
+      <div class="page-sub">Preencha o perfil para personalizar o sistema</div>
+    </div>
+
+    <div class="card" style="max-width:600px">
+      <form method="POST" action="/criancas/nova">
+
+        <div style="margin-bottom:1.2rem">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:0.03em">NOME COMPLETO *</label>
+          <input type="text" name="nome" placeholder="Nome da criança" required
+            style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);color:var(--text)">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px">DATA DE NASCIMENTO</label>
+            <input type="date" name="data_nascimento"
+              style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font)">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px">NÍVEL TEA</label>
+            <select name="nivel_tea"
+              style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);background:var(--bg)">
+              <option value="">Não informado</option>
+              <option value="1">Nível 1 — Leve</option>
+              <option value="2">Nível 2 — Moderado</option>
+              <option value="3">Nível 3 — Severo</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.2rem">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">PERFIL SENSORIAL</label>
+          <div style="background:var(--bg2);border-radius:10px;padding:1rem;display:grid;gap:12px">
+
+            {% for campo, label, emoji in [
+              ('sensibilidade_som','Sons e barulhos','🔊'),
+              ('sensibilidade_luz','Luz e estímulos visuais','💡'),
+              ('sensibilidade_toque','Toque e texturas','🤚')
+            ] %}
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span>{{ emoji }} {{ label }}</span>
+                <span style="color:var(--text2);font-size:12px">Baixo → Alto</span>
+              </div>
+              <div style="display:flex;gap:8px">
+                {% for n in [1,2,3,4,5] %}
+                <label style="flex:1;cursor:pointer">
+                  <input type="radio" name="{{ campo }}" value="{{ n }}" {% if n==3 %}checked{% endif %} style="display:none">
+                  <div class="sens-btn" onclick="selectSens(this,'{{ campo }}',{{ n }})"
+                    style="text-align:center;padding:8px 4px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;{% if n==3 %}background:var(--teal);color:white;border-color:var(--teal);{% endif %}">
+                    {{ n }}
+                  </div>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px">OBSERVAÇÕES GERAIS</label>
+          <textarea name="descricao" rows="3" placeholder="Comportamentos, preferências, gatilhos de crise..."
+            style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);resize:vertical"></textarea>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-primary" style="flex:1">Cadastrar criança →</button>
+          <a href="/dashboard/familia" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+function selectSens(el, campo, val) {
+  document.querySelectorAll('[name="'+campo+'"]').forEach((r,i) => {
+    r.checked = (i+1) == val;
+    const btn = r.nextElementSibling;
+    if ((i+1) == val) {
+      btn.style.background = 'var(--teal)';
+      btn.style.color = 'white';
+      btn.style.borderColor = 'var(--teal)';
+    } else {
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = 'var(--border)';
+    }
+  });
+}
+</script>
+{% endblock %}

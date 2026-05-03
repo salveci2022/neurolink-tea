@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Crianças — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Família</div>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Início</a>
+      <a href="/criancas" class="sidebar-link active"><span class="sidebar-icon">👶</span> Crianças</a>
+      <a href="/rotinas" class="sidebar-link"><span class="sidebar-icon">📅</span> Rotinas</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="page-title">Crianças</div>
+        <div class="page-sub">{{ criancas|length }} cadastrada(s)</div>
+      </div>
+      <a href="/criancas/nova" class="btn btn-primary">+ Nova criança</a>
+    </div>
+
+    {% if not criancas %}
+    <div class="card" style="text-align:center;padding:3rem">
+      <div style="font-size:48px;margin-bottom:1rem">👶</div>
+      <h3 style="margin-bottom:8px">Nenhuma criança cadastrada</h3>
+      <a href="/criancas/nova" class="btn btn-primary" style="margin-top:1rem">+ Cadastrar agora</a>
+    </div>
+    {% else %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+      {% for c in criancas %}
+      <div class="card" style="padding:1.2rem">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--teal-light);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;flex-shrink:0">
+            {{ c.nome[0] }}
+          </div>
+          <div>
+            <div style="font-weight:500;font-size:15px">{{ c.nome }}</div>
+            <div style="font-size:12px;color:var(--text2)">
+              {% if c.idade %}{{ c.idade }} anos · {% endif %}
+              {% if c.nivel_tea %}TEA nível {{ c.nivel_tea }}{% else %}Nível não informado{% endif %}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <a href="/criancas/{{ c.id }}" class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px">Ver perfil</a>
+          <a href="/rotinas/{{ c.id }}" class="btn btn-primary" style="flex:1;justify-content:center;font-size:12px">📅 Rotina</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

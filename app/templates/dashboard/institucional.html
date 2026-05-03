@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Institucional — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Instituição</div>
+      <a href="/dashboard/institucional" class="sidebar-link active"><span class="sidebar-icon">🏛️</span> Início</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span> Beneficiários</a>
+      <a href="/ia" class="sidebar-link"><span class="sidebar-icon">🤖</span> Assistente IA</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Painel Institucional</div>
+      <div class="page-sub">{{ hoje.strftime('%d/%m/%Y') }} · {{ current_user.tenant.nome }}</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" style="color:var(--teal)">{{ total_beneficiarios }}</div><div class="stat-label">Beneficiários</div></div>
+      <div class="stat-card"><div class="stat-num">{{ total_tecnicos }}</div><div class="stat-label">Técnicos</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:{% if crises_mes > 0 %}#993C1D{% else %}var(--teal){% endif %}">{{ crises_mes }}</div><div class="stat-label">Crises este mês</div></div>
+    </div>
+  </main>
+</div>
+{% endblock %}

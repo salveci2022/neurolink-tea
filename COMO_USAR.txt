@@ -1,0 +1,225 @@
+# NeuroLink TEA — Guia de Instalação e Execução
+# Comandos para Windows (CMD/PowerShell), Mac e Linux
+
+==========================================================
+  PASSO 1 — EXTRAIR O PROJETO
+==========================================================
+
+WINDOWS:
+  Clique com botão direito no arquivo ZIP → "Extrair aqui"
+  Ou pelo CMD:
+    tar -xf neurolink_tea_v1.zip
+    cd neurolink-tea
+
+MAC / LINUX:
+    unzip neurolink_tea_v1.zip
+    cd neurolink-tea
+
+
+==========================================================
+  PASSO 2 — INSTALAR PYTHON (se não tiver)
+==========================================================
+
+WINDOWS:
+  Baixe em: https://python.org/downloads
+  ⚠️  Marque "Add Python to PATH" durante instalação!
+  Verificar: python --version
+
+MAC:
+  brew install python3
+  Verificar: python3 --version
+
+LINUX (Ubuntu/Debian):
+  sudo apt update && sudo apt install python3 python3-pip python3-venv -y
+
+
+==========================================================
+  PASSO 3 — CRIAR AMBIENTE VIRTUAL
+==========================================================
+
+WINDOWS (CMD):
+    python -m venv venv
+    venv\Scripts\activate
+
+WINDOWS (PowerShell):
+    python -m venv venv
+    .\venv\Scripts\Activate.ps1
+    [Se der erro: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser]
+
+MAC / LINUX:
+    python3 -m venv venv
+    source venv/bin/activate
+
+✅ Você verá "(venv)" no início do terminal quando ativado.
+
+
+==========================================================
+  PASSO 4 — INSTALAR DEPENDÊNCIAS
+==========================================================
+
+TODOS OS SISTEMAS (com venv ativo):
+    pip install -r requirements.txt
+
+Se demorar, aguarde — está instalando Flask, SQLAlchemy, etc.
+
+
+==========================================================
+  PASSO 5 — CONFIGURAR VARIÁVEIS DE AMBIENTE
+==========================================================
+
+WINDOWS (CMD):
+    copy .env.example .env
+    notepad .env
+
+WINDOWS (PowerShell):
+    Copy-Item .env.example .env
+    notepad .env
+
+MAC / LINUX:
+    cp .env.example .env
+    nano .env         (ou: code .env  se tiver VS Code)
+
+Preencha no arquivo .env:
+  SECRET_KEY=qualquer-texto-longo-aqui-ex-neurolink2025
+  DATABASE_URL=postgresql://postgres:SUASENHA@localhost:5432/neurolink_tea
+
+
+==========================================================
+  PASSO 6 — INSTALAR E CONFIGURAR POSTGRESQL
+==========================================================
+
+WINDOWS:
+  Baixe em: https://www.postgresql.org/download/windows/
+  Durante instalação, defina senha do usuário "postgres"
+
+  Abrir SQL Shell (psql) como administrador:
+    CREATE DATABASE neurolink_tea;
+    \q
+
+MAC:
+    brew install postgresql@15
+    brew services start postgresql@15
+    createdb neurolink_tea
+
+LINUX:
+    sudo apt install postgresql postgresql-contrib -y
+    sudo systemctl start postgresql
+    sudo -u postgres createdb neurolink_tea
+    sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+
+
+==========================================================
+  PASSO 7 — CRIAR AS TABELAS DO BANCO
+==========================================================
+
+TODOS (com venv ativo, dentro da pasta neurolink-tea):
+
+    flask db init
+    flask db migrate -m "versao inicial"
+    flask db upgrade
+
+✅ Isso cria todas as tabelas: users, tenants, criancas, rotinas, etc.
+
+
+==========================================================
+  PASSO 8 — POPULAR COM DADOS DE EXEMPLO
+==========================================================
+
+    flask seed
+
+Isso cria 4 usuários prontos para testar:
+  ana@exemplo.com       / senha123  → pai/mãe
+  joao@escola.com       / senha123  → coordenador escolar
+  mariana@clinica.com   / senha123  → terapeuta
+  admin@neurolink.com.br/ admin@NL2025! → administrador
+
+
+==========================================================
+  PASSO 9 — EXECUTAR O SERVIDOR
+==========================================================
+
+    python run.py
+
+Acesse no navegador: http://localhost:5000
+
+Para parar: Ctrl + C
+
+
+==========================================================
+  COMANDOS DO DIA A DIA
+==========================================================
+
+# Ativar ambiente e iniciar (faça isso toda vez):
+WINDOWS:    venv\Scripts\activate  →  python run.py
+MAC/LINUX:  source venv/bin/activate  →  python run.py
+
+# Ver todas as rotas disponíveis:
+    flask routes
+
+# Resetar banco (apaga tudo e recria):
+    flask db downgrade base
+    flask db upgrade
+    flask seed
+
+# Adicionar usuário manualmente (via Python):
+    python -c "
+from run import app
+from app.models import db, User, UserPerfil
+with app.app_context():
+    u = User(tenant_id=1, nome='Novo Usuário', email='novo@email.com', perfil=UserPerfil.PAI_MAE)
+    u.set_senha('minhasenha')
+    db.session.add(u)
+    db.session.commit()
+    print('Usuário criado!')
+"
+
+
+==========================================================
+  ERROS COMUNS E SOLUÇÕES
+==========================================================
+
+ERRO: ModuleNotFoundError
+  → Solução: pip install -r requirements.txt
+
+ERRO: could not connect to server (PostgreSQL)
+  WINDOWS: Iniciar serviço PostgreSQL pelo "Serviços" do Windows
+  LINUX:   sudo systemctl start postgresql
+  MAC:     brew services start postgresql@15
+
+ERRO: FATAL: password authentication failed
+  → Edite .env e corrija a senha do DATABASE_URL
+
+ERRO: (psycopg2.OperationalError) database "neurolink_tea" does not exist
+  → Execute: createdb neurolink_tea (ou crie pelo pgAdmin)
+
+ERRO: flask: command not found
+  → O venv não está ativo. Execute:
+    Windows: venv\Scripts\activate
+    Mac/Linux: source venv/bin/activate
+
+ERRO: sqlalchemy.exc.ProgrammingError — relation does not exist
+  → As tabelas não foram criadas. Execute: flask db upgrade
+
+ERRO PowerShell: "execução de scripts foi desabilitada"
+  → Execute: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+
+==========================================================
+  DEPLOY NO RENDER.COM (produção gratuita)
+==========================================================
+
+1. Crie conta em: https://render.com
+2. New → PostgreSQL → criar banco gratuito
+3. Copie a "Internal Database URL"
+4. New → Web Service → conectar GitHub
+5. Configure:
+     Build Command: pip install -r requirements.txt
+     Start Command: gunicorn run:app --bind 0.0.0.0:$PORT
+6. Em "Environment Variables", adicione:
+     DATABASE_URL = (URL copiada do banco)
+     SECRET_KEY   = uma senha forte
+     FLASK_ENV    = production
+7. Deploy!
+8. No Shell do Render, execute:
+     flask db upgrade
+     flask seed

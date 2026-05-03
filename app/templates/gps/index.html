@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}GPS — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navegacao</div>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Inicio</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span> Criancas</a>
+      <a href="/gps" class="sidebar-link active"><span class="sidebar-icon">📍</span> GPS</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">📍 Localizacao em Tempo Real</div>
+      <div class="page-sub">Selecione uma crianca para acompanhar</div>
+    </div>
+    {% if not criancas %}
+    <div class="card" style="text-align:center;padding:3rem">
+      <div style="font-size:48px;margin-bottom:1rem">📍</div>
+      <h3>Nenhuma crianca cadastrada</h3>
+      <a href="/criancas/nova" class="btn btn-primary" style="margin-top:1rem">Cadastrar crianca</a>
+    </div>
+    {% else %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+      {% for c in criancas %}
+      <div class="card" style="padding:1.2rem">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--teal-light);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600">{{ c.nome[0] }}</div>
+          <div>
+            <div style="font-weight:500;font-size:15px">{{ c.nome }}</div>
+            <div style="font-size:12px;color:var(--text2)">{% if c.idade %}{{ c.idade }} anos{% endif %}</div>
+          </div>
+        </div>
+        <a href="/gps/{{ c.id }}" class="btn btn-primary" style="width:100%;justify-content:center">
+          📍 Ver no mapa
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

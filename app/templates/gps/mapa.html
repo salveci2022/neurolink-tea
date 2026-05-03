@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% block title %}GPS {{ crianca.nome }} — NeuroLink TEA{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+#mapa{height:380px;border-radius:12px;z-index:1}
+.sdot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.sdot.ativo{background:#1D9E75;animation:pulse 1.5s infinite}
+.sdot.inativo{background:#aaa}
+.sdot.erro{background:#993C1D}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.gb{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;
+    font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:var(--font);
+    transition:opacity .15s}
+.gb:hover{opacity:.85}
+.gb:disabled{opacity:.45;cursor:not-allowed}
+.gv{background:#0F6E56;color:white}
+.gc{background:var(--bg2);color:var(--text);border:0.5px solid var(--border)}
+.gr{background:#FAECE7;color:#993C1D;border:0.5px solid #F5C4B3}
+.ga{background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4}
+.gp{background:#EEEDFE;color:#534AB7;border:0.5px solid #C5C2F8}
+.sm{background:var(--bg2);border-radius:8px;padding:10px 14px;text-align:center;border:0.5px solid var(--border)}
+.sm strong{display:block;font-size:1.4rem;font-weight:600;color:var(--teal);line-height:1}
+.sm small{font-size:11px;color:var(--text2);margin-top:3px;display:block}
+.hrow{display:flex;justify-content:space-between;align-items:center;
+      padding:7px 4px;border-bottom:0.5px solid var(--border);font-size:12px}
+.hrow:last-child{border-bottom:none}
+.alr{background:#FAECE7;border:0.5px solid #F5C4B3;border-radius:8px;
+     padding:10px 14px;font-size:13px;color:#993C1D;margin-bottom:8px;
+     display:flex;align-items:center;gap:8px}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;
+     letter-spacing:.05em;text-transform:uppercase}
+</style>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navegação</div>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span>Início</a>
+      <a href="/gps" class="sidebar-link"><span class="sidebar-icon">📍</span>GPS</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span>Crianças</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Status GPS</div>
+      <div style="padding:8px 10px">
+        <div id="sid-status" style="font-size:13px;color:var(--text2)">
+          <span class="sdot inativo"></span>Aguardando...
+        </div>
+        <div id="sid-coords" style="font-size:11px;font-family:monospace;color:var(--text2);margin-top:5px;line-height:2"></div>
+        <div id="sid-hora"   style="font-size:11px;color:var(--text2)"></div>
+        <div id="sid-prec"   style="font-size:11px;color:var(--text2)"></div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Criança</div>
+      <div style="padding:6px 10px">
+        <div style="font-weight:500;font-size:14px">{{ crianca.nome }}</div>
+        <div style="font-size:12px;color:var(--text2)">
+          {% if crianca.idade %}{{ crianca.idade }} anos · {% endif %}
+          TEA nível {{ crianca.nivel_tea or '?' }}
+        </div>
+      </div>
+    </div>
+    {% if cercas %}
+    <div class="sidebar-section">
+      <div class="sidebar-label">Cercas Virtuais</div>
+      {% for c in cercas %}
+      <div style="font-size:12px;color:var(--text2);padding:3px 10px">
+        🔶 {{ c.nome }} — {{ c.raio_metros|int }}m
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" style="padding:1.2rem">
+    <!-- TÍTULO -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="page-title">📍 {{ crianca.nome }}</div>
+        <div class="page-sub" id="subtitulo">Pronto para iniciar o rastreamento</div>
+      </div>
+      <a href="/gps" class="gb gc" style="text-decoration:none">← Voltar</a>
+    </div>
+
+    <!-- ALERTAS -->
+    <div id="alertas"></div>
+
+    <!-- BOTÕES -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <button id="btn-start"   class="gb gv" onclick="iniciar()">▶ Iniciar</button>
+      <button id="btn-pause"   class="gb gc" onclick="pausar()"    style="display:none">⏸ Pausar</button>
+      <button id="btn-reinit"  class="gb ga" onclick="reiniciar()" style="display:none">🔄 Reiniciar</button>
+      <button id="btn-clear"   class="gb gr" onclick="limpar()">🗑️ Limpar histórico</button>
+      <button id="btn-pdf"     class="gb gp" onclick="baixarPDF()">📄 Baixar PDF</button>
+      <button id="btn-center"  class="gb gc" onclick="centralizarMapa()">🎯 Centralizar</button>
+      <button id="btn-hist"    class="gb gc" onclick="toggleHistorico()">📋 Histórico</button>
+      <button id="btn-refresh" class="gb gc" onclick="atualizarHistorico()" title="Recarregar do banco">↺ Atualizar</button>
+    </div>
+
+    <!-- ESTATÍSTICAS -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
+      <div class="sm"><strong id="s-pts">0</strong><small>Pontos</small></div>
+      <div class="sm"><strong id="s-dist">0m</strong><small>Distância</small></div>
+      <div class="sm"><strong id="s-tempo">00:00</strong><small>Tempo</small></div>
+      <div class="sm"><strong id="s-prec">—</strong><small>Precisão</small></div>
+    </div>
+
+    <!-- MAPA -->
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+      <div id="mapa"></div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div id="hist-panel" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="font-size:14px;font-weight:500">📋 Histórico de Localizações</h3>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="hist-total" style="font-size:12px;color:var(--text2)"></span>
+          <span class="tag" style="background:var(--teal-light);color:var(--teal)" id="hist-badge">banco</span>
+        </div>
+      </div>
+      <div id="hist-lista" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────
+const CID = {{ crianca.id }};
+let mapa, marcador, circulo, linha;
+let watchId = null, timer = null;
+let latAtual = null, lngAtual = null;
+let trilha = [], pts = 0, dist = 0, seg = 0;
+
+// ── Mapa ──────────────────────────────────────────────────
+function criarMapa(lat, lng) {
+  if (mapa) return;
+  mapa = L.map('mapa').setView([lat,lng], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'© OpenStreetMap', maxZoom:19}).addTo(mapa);
+
+  const ico = L.divIcon({
+    html:'<div style="background:#0F6E56;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:15px">👶</div>',
+    iconSize:[30,30], iconAnchor:[15,15], className:''
+  });
+  marcador = L.marker([lat,lng],{icon:ico}).addTo(mapa)
+    .bindPopup('<b>{{ crianca.nome }}</b><br>Posição atual');
+  circulo  = L.circle([lat,lng],{radius:20,color:'#0F6E56',fillColor:'#1D9E75',fillOpacity:.15,weight:1}).addTo(mapa);
+  linha    = L.polyline([],{color:'#0F6E56',weight:3,opacity:.7,dashArray:'6,4'}).addTo(mapa);
+
+  {% for c in cercas %}
+  L.circle([{{c.latitude}},{{c.longitude}}],{radius:{{c.raio_metros}},color:'#BA7517',
+    fillColor:'#FAEEDA',fillOpacity:.2,weight:2,dashArray:'8,4'})
+    .addTo(mapa).bindPopup('<b>{{c.nome}}</b><br>Raio: {{c.raio_metros|int}}m');
+  {% endfor %}
+
+  {% if ultima %}
+  L.circleMarker([{{ultima.latitude}},{{ultima.longitude}}],
+    {radius:8,color:'#999',fillColor:'#ccc',fillOpacity:.8,weight:2})
+    .addTo(mapa).bindPopup('Última posição salva<br>{{ultima.criado_em.strftime("%d/%m %H:%M")}}');
+  {% endif %}
+}
+
+// ── Capturar posição ──────────────────────────────────────
+function onPos(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  const prec= pos.coords.accuracy;
+
+  if (!mapa) criarMapa(lat, lng);
+  if (latAtual !== null)
+    dist += haversine(latAtual, lngAtual, lat, lng);
+  latAtual = lat; lngAtual = lng; pts++;
+  trilha.push([lat,lng]);
+
+  marcador.setLatLng([lat,lng]);
+  circulo.setLatLng([lat,lng]).setRadius(Math.min(prec||20,60));
+  linha.setLatLngs(trilha);
+  mapa.panTo([lat,lng],{animate:true,duration:.5});
+
+  // Sidebar
+  document.getElementById('sid-coords').innerHTML =
+    'Lat: '+lat.toFixed(6)+'<br>Lng: '+lng.toFixed(6);
+  document.getElementById('sid-hora').textContent  =
+    'Atualizado: '+new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('sid-prec').textContent  =
+    prec ? '~'+Math.round(prec)+'m precisão' : '';
+
+  // Stats
+  document.getElementById('s-pts').textContent  = pts;
+  document.getElementById('s-dist').textContent =
+    dist >= 1000 ? (dist/1000).toFixed(2)+'km' : Math.round(dist)+'m';
+  document.getElementById('s-prec').textContent =
+    prec ? Math.round(prec)+'m' : '—';
+
+  // Salvar no banco
+  fetch('/gps/save', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({latitude:lat, longitude:lng,
+                          precisao_m:prec, crianca_id:CID})
+  }).then(r=>r.json()).then(d=>{
+    if (d.alertas && d.alertas.length)
+      document.getElementById('alertas').innerHTML =
+        d.alertas.map(a=>
+          `<div class="alr">🚨 <b>${a.nome}</b> — Criança saiu! ${a.distancia_m}m (limite ${a.raio_m}m)</div>`
+        ).join('');
+    else document.getElementById('alertas').innerHTML='';
+  }).catch(()=>{});
+}
+
+function onErro(e) {
+  const msgs=['','Permissão negada','Indisponível','Timeout'];
+  setStatus('erro','🔴 Erro: '+(msgs[e.code]||'GPS'));
+}
+
+// ── Controles ─────────────────────────────────────────────
+function iniciar() {
+  if (!navigator.geolocation) { alert('Navegador não suporta GPS.'); return; }
+  document.getElementById('btn-start').style.display  = 'none';
+  document.getElementById('btn-pause').style.display  = 'flex';
+  document.getElementById('btn-reinit').style.display = 'flex';
+  setStatus('ativo','🟢 Rastreando em tempo real...');
+  document.getElementById('subtitulo').textContent = 'Rastreamento ativo';
+  timer = setInterval(()=>{
+    seg++;
+    const m=String(Math.floor(seg/60)).padStart(2,'0');
+    const s=String(seg%60).padStart(2,'0');
+    document.getElementById('s-tempo').textContent = m+':'+s;
+  },1000);
+  watchId = navigator.geolocation.watchPosition(onPos, onErro,
+    {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+}
+
+function pausar() {
+  if (watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  clearInterval(timer);
+  document.getElementById('btn-start').style.display  = 'flex';
+  document.getElementById('btn-pause').style.display  = 'none';
+  setStatus('inativo','⏸ Pausado — '+pts+' pontos');
+  document.getElementById('subtitulo').textContent = 'Pausado';
+}
+
+function reiniciar() {
+  if (!confirm('Reiniciar zerará a trilha atual. A sessão anterior já foi salva no banco.\n\nContinuar?')) return;
+  pausar();
+  trilha=[]; pts=0; dist=0; seg=0;
+  if(linha) linha.setLatLngs([]);
+  document.getElementById('s-pts').textContent  = '0';
+  document.getElementById('s-dist').textContent = '0m';
+  document.getElementById('s-tempo').textContent= '00:00';
+  document.getElementById('s-prec').textContent = '—';
+  setStatus('inativo','🔄 Reiniciado — pronto para começar');
+  document.getElementById('subtitulo').textContent = 'Reiniciado';
+  setTimeout(iniciar, 400);
+}
+
+async function limpar() {
+  const total = document.getElementById('hist-total').textContent;
+  if (!confirm(`Apagar ${total} do histórico no banco?\n\nEsta ação não pode ser desfeita.`)) return;
+  const btn = document.getElementById('btn-clear');
+  btn.disabled = true; btn.textContent = '⏳ Apagando...';
+  try {
+    const r = await fetch('/gps/limpar/'+CID, {method:'DELETE'});
+    const d = await r.json();
+    if (d.ok) {
+      await atualizarHistorico();
+      showToast('✅ '+d.apagados+' registros apagados com sucesso!', 'success');
+    }
+  } catch(e) { showToast('Erro ao limpar','danger'); }
+  btn.disabled = false; btn.textContent = '🗑️ Limpar histórico';
+}
+
+// ── Histórico dinâmico (fetch do banco) ───────────────────
+let historicoCache = [];
+
+async function atualizarHistorico() {
+  const btn = document.getElementById('btn-refresh');
+  btn.textContent = '⏳';
+  try {
+    const r = await fetch('/gps/list/'+CID);
+    const d = await r.json();
+    if (d.ok) {
+      historicoCache = d.dados;
+      renderHistorico(d.dados, d.total);
+      document.getElementById('hist-total').textContent = d.total+' registros';
+    }
+  } catch(e) {}
+  btn.textContent = '↺ Atualizar';
+}
+
+function renderHistorico(dados, total) {
+  const lista = document.getElementById('hist-lista');
+  if (!dados || !dados.length) {
+    lista.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text2);font-size:13px">Nenhum registro no banco.</div>';
+    return;
+  }
+  lista.innerHTML = dados.map((h,i) => `
+    <div class="hrow">
+      <span style="font-weight:500;color:var(--text);min-width:28px">#${total-i}</span>
+      <span style="color:var(--text2)">${h.criado_em}</span>
+      <span style="font-family:monospace;font-size:11px;color:var(--text2)">
+        ${parseFloat(h.latitude).toFixed(5)}, ${parseFloat(h.longitude).toFixed(5)}
+      </span>
+      <span style="font-size:11px;color:var(--text2)">${h.precisao?'~'+Math.round(h.precisao)+'m':'—'}</span>
+    </div>`).join('');
+}
+
+function toggleHistorico() {
+  const p = document.getElementById('hist-panel');
+  const aberto = p.style.display !== 'none';
+  p.style.display = aberto ? 'none' : 'block';
+  if (!aberto) atualizarHistorico();
+}
+
+// ── PDF via backend ───────────────────────────────────────
+function baixarPDF() {
+  const btn = document.getElementById('btn-pdf');
+  btn.disabled = true; btn.textContent = '⏳ Gerando PDF...';
+  const link = document.createElement('a');
+  link.href = '/gps/pdf/'+CID;
+  link.download = '';
+  link.click();
+  setTimeout(()=>{
+    btn.disabled = false;
+    btn.textContent = '📄 Baixar PDF';
+  }, 3000);
+}
+
+// ── Utilitários ───────────────────────────────────────────
+function centralizarMapa() {
+  if (mapa && latAtual) mapa.setView([latAtual,lngAtual],16);
+}
+
+function setStatus(tipo, msg) {
+  document.getElementById('sid-status').innerHTML =
+    '<span class="sdot '+tipo+'"></span>'+msg;
+}
+
+function showToast(msg, tipo) {
+  const d = document.createElement('div');
+  d.className = 'alert alert-'+(tipo==='success'?'success':'danger');
+  d.style.cssText = 'position:fixed;top:70px;right:20px;z-index:9999;min-width:260px;animation:fadeIn .3s';
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 3500);
+}
+
+function haversine(la1,lo1,la2,lo2) {
+  const R=6371000, f1=la1*Math.PI/180, f2=la2*Math.PI/180;
+  const df=(la2-la1)*Math.PI/180, dl=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(df/2)**2+Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ── Init ──────────────────────────────────────────────────
+window.onload = function() {
+  {% if ultima %}
+    criarMapa({{ ultima.latitude }}, {{ ultima.longitude }});
+    document.getElementById('subtitulo').textContent =
+      'Última posição: {{ ultima.criado_em.strftime("%d/%m/%Y %H:%M") }}';
+  {% else %}
+    navigator.geolocation
+      ? navigator.geolocation.getCurrentPosition(
+          p => criarMapa(p.coords.latitude, p.coords.longitude),
+          ()  => criarMapa(-15.7801, -47.9292))
+      : criarMapa(-15.7801, -47.9292);
+  {% endif %}
+  atualizarHistorico();
+};
+</script>
+{% endblock %}

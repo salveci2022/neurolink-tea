@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Clínica — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Clínica</div>
+      <a href="/dashboard/clinica" class="sidebar-link active"><span class="sidebar-icon">🩺</span> Início</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span> Pacientes</a>
+      <a href="/clinica/sessoes" class="sidebar-link"><span class="sidebar-icon">📋</span> Sessões</a>
+      <a href="/ia" class="sidebar-link"><span class="sidebar-icon">🤖</span> IA Clínica</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Painel Clínico</div>
+      <div class="page-sub">{{ hoje.strftime('%d/%m/%Y') }} · {{ current_user.tenant.nome }}</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" style="color:var(--teal)">{{ total_pacientes }}</div><div class="stat-label">Pacientes ativos</div></div>
+      <div class="stat-card"><div class="stat-num">{{ sessoes_hoje }}</div><div class="stat-label">Sessões hoje</div></div>
+      <div class="stat-card"><div class="stat-num">{{ sessoes_semana }}</div><div class="stat-label">Sessões esta semana</div></div>
+    </div>
+    {% if proximas %}
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:500;margin-bottom:1rem">Próximas sessões</h3>
+      <table>
+        <thead><tr><th>Data</th><th>Paciente</th><th>Duração</th></tr></thead>
+        <tbody>
+          {% for s in proximas %}
+          <tr>
+            <td>{{ s.data_sessao.strftime('%d/%m') }}</td>
+            <td>{{ s.prontuario.crianca.nome }}</td>
+            <td>{{ s.duracao_min }} min</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

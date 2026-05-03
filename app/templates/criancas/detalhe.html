@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ crianca.nome }} — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Família</div>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Início</a>
+      <a href="/criancas" class="sidebar-link"><span class="sidebar-icon">👶</span> Crianças</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="page-title">{{ crianca.nome }}</div>
+        <div class="page-sub">
+          {% if crianca.idade %}{{ crianca.idade }} anos · {% endif %}
+          TEA nível {{ crianca.nivel_tea or '?' }}
+        </div>
+      </div>
+      <a href="/criancas" class="btn btn-secondary">← Voltar</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:500;margin-bottom:1rem">🔊 Perfil Sensorial</h3>
+        {% for label, val in [('Som', crianca.sensibilidade_som),('Luz', crianca.sensibilidade_luz),('Toque', crianca.sensibilidade_toque)] %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border)">
+          <span style="font-size:13px;color:var(--text2)">{{ label }}</span>
+          <div style="display:flex;gap:4px">
+            {% for i in range(1,6) %}
+            <div style="width:20px;height:8px;border-radius:4px;background:{% if i <= val %}var(--teal){% else %}var(--bg2){% endif %}"></div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:500;margin-bottom:1rem">📋 Informações</h3>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8">
+          {% if crianca.data_nascimento %}<div><strong>Nascimento:</strong> {{ crianca.data_nascimento|data_br }}</div>{% endif %}
+          {% if crianca.descricao %}<div style="margin-top:8px">{{ crianca.descricao }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:1rem">
+      <a href="/rotinas/{{ crianca.id }}" class="btn btn-primary">📅 Ver Rotinas</a>
+      <a href="/gps/{{ crianca.id }}" class="btn btn-secondary">📍 Localização</a>
+    </div>
+  </main>
+</div>
+{% endblock %}

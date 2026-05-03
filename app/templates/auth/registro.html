@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar Conta — NeuroLink TEA</title>
+<style>
+  :root{--teal:#0F6E56;--teal-light:#E1F5EE;--text:#1a1a18;--text2:#5F5E5A;--bg:#fff;--bg2:#f8f7f3;--border:rgba(0,0,0,0.08);--font:-apple-system,'Segoe UI',sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg2);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+  .box{background:var(--bg);border:0.5px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:440px}
+  .logo{width:40px;height:40px;background:var(--teal);border-radius:10px;color:white;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+  h1{font-size:1.25rem;font-weight:600;text-align:center;margin-bottom:4px}
+  .sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:1.8rem}
+  label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:0.03em}
+  input[type=text],input[type=email],input[type=password]{width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--bg);outline:none;transition:border 0.15s}
+  input:focus{border-color:var(--teal)}
+  .field{margin-bottom:1rem}
+  .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.2rem}
+  .tipo-opt{cursor:pointer}
+  .tipo-opt input{display:none}
+  .tipo-card{
+    border:1.5px solid var(--border);border-radius:10px;padding:10px;
+    text-align:center;transition:all 0.15s;
+  }
+  .tipo-opt input:checked + .tipo-card{border-color:var(--teal);background:var(--teal-light)}
+  .tipo-card span{font-size:20px;display:block;margin-bottom:4px}
+  .tipo-card strong{font-size:12px;font-weight:500;color:var(--text)}
+  .tipo-card small{font-size:11px;color:var(--text2)}
+  .btn{width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font)}
+  .btn:hover{opacity:0.88}
+  .back{text-align:center;margin-top:1rem;font-size:13px}
+  .back a{color:var(--teal);text-decoration:none}
+  .alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem}
+  .alert-danger{background:#FAECE7;color:#993C1D}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo" style="text-align:center">N</div>
+  <h1>Criar conta grátis</h1>
+  <p class="sub">Sem cartão de crédito. Comece em 2 minutos.</p>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" action="/registro">
+    <div class="field">
+      <label>TIPO DE ORGANIZAÇÃO</label>
+      <div class="tipo-grid">
+        <label class="tipo-opt">
+          <input type="radio" name="tipo_tenant" value="familia" {% if form and form.get('tipo_tenant')=='familia' %}checked{% endif %} required>
+          <div class="tipo-card"><span>👨‍👩‍👧</span><strong>Família</strong><small>Pais e cuidadores</small></div>
+        </label>
+        <label class="tipo-opt">
+          <input type="radio" name="tipo_tenant" value="escola" {% if form and form.get('tipo_tenant')=='escola' %}checked{% endif %}>
+          <div class="tipo-card"><span>🏫</span><strong>Escola</strong><small>Professores e coord.</small></div>
+        </label>
+        <label class="tipo-opt">
+          <input type="radio" name="tipo_tenant" value="clinica" {% if form and form.get('tipo_tenant')=='clinica' %}checked{% endif %}>
+          <div class="tipo-card"><span>🩺</span><strong>Clínica</strong><small>Terapeutas</small></div>
+        </label>
+        <label class="tipo-opt">
+          <input type="radio" name="tipo_tenant" value="instituicao" {% if form and form.get('tipo_tenant')=='instituicao' %}checked{% endif %}>
+          <div class="tipo-card"><span>🏛️</span><strong>Instituição</strong><small>APAE, CAPS, etc.</small></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>NOME DA ORGANIZAÇÃO</label>
+      <input type="text" name="nome_org" value="{{ form.get('nome_org','') if form else '' }}" placeholder="Ex: Escola Municipal Arco-Íris" required>
+    </div>
+    <div class="field">
+      <label>SEU NOME COMPLETO</label>
+      <input type="text" name="nome_user" value="{{ form.get('nome_user','') if form else '' }}" placeholder="Seu nome" required>
+    </div>
+    <div class="field">
+      <label>E-MAIL</label>
+      <input type="email" name="email" value="{{ form.get('email','') if form else '' }}" placeholder="seu@email.com" required>
+    </div>
+    <div class="field">
+      <label>SENHA (mínimo 8 caracteres)</label>
+      <input type="password" name="senha" placeholder="••••••••" required minlength="8">
+    </div>
+    <div class="field">
+      <label>CONFIRMAR SENHA</label>
+      <input type="password" name="confirma" placeholder="••••••••" required>
+    </div>
+
+    <button type="submit" class="btn">Criar minha conta →</button>
+  </form>
+
+  <div class="back"><a href="/login">Já tenho conta — fazer login</a></div>
+</div>
+</body>
+</html>
