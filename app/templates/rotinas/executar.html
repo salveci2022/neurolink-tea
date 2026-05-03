@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% block title %}{{ rotina.nome }} — NeuroLink TEA{% endblock %}
+{% block content %}
+<style>
+.atv-card {
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.atv-card.ativa {
+  border-color: var(--cor-atv);
+  background: var(--cor-atv-bg);
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(0,0,0,.1);
+}
+.atv-card.concluida {
+  opacity: .6;
+  border-color: #1D9E75;
+  background: #E1F5EE;
+}
+.atv-card.pulada {
+  opacity: .4;
+  border-style: dashed;
+}
+.atv-icone { font-size: 52px; margin-bottom: 8px; display: block; }
+.atv-nome { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.atv-tempo { font-size: 13px; color: var(--text2); }
+.check-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #1D9E75; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: bold;
+}
+.timer-ring {
+  position: relative; width: 140px; height: 140px; margin: 0 auto 1rem;
+}
+.timer-ring svg { transform: rotate(-90deg); }
+.timer-ring .num {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  font-size: 28px; font-weight: 600; color: var(--text);
+}
+.progresso-bar {
+  height: 10px; border-radius: 5px;
+  background: var(--bg2); overflow: hidden; margin-bottom: 4px;
+}
+.progresso-fill {
+  height: 100%; border-radius: 5px;
+  background: #1D9E75; transition: width .5s;
+}
+.btn-grande {
+  width: 100%; padding: 16px; border-radius: 12px;
+  font-size: 16px; font-weight: 500; border: none;
+  cursor: pointer; font-family: var(--font); transition: opacity .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-grande:hover { opacity: .88; }
+/* Modo crise */
+.modo-crise {
+  position: fixed; inset: 0; background: #E1F5EE;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 999; display: none;
+}
+.respiracao-circulo {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: #0F6E56; display: flex; align-items: center;
+  justify-content: center; color: white; font-size: 40px;
+  animation: respirar 4s ease-in-out infinite;
+  margin: 2rem 0;
+}
+@keyframes respirar {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+}
+</style>
+
+<!-- MODO CRISE -->
+<div class="modo-crise" id="modo-crise">
+  <div style="font-size:13px;color:#0F6E56;letter-spacing:.1em;text-transform:uppercase;font-weight:500">Respira comigo</div>
+  <div class="respiracao-circulo">🌬️</div>
+  <div id="crise-txt" style="font-size:18px;font-weight:500;color:#0F6E56">Inspira...</div>
+  <div style="font-size:13px;color:#085041;margin-top:8px">Tudo vai ficar bem</div>
+  <button onclick="fecharCrise()" style="margin-top:2rem;padding:14px 32px;background:#0F6E56;color:white;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:var(--font)">
+    Estou bem agora ✓
+  </button>
+</div>
+
+<div style="max-width:700px;margin:0 auto;padding:1.5rem 1rem">
+
+  <!-- HEADER -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <div>
+      <div style="font-size:20px;font-weight:600">{{ rotina.nome }}</div>
+      <div style="font-size:13px;color:var(--text2)">{{ crianca.nome }} · {{ hoje.strftime('%d/%m/%Y') }}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="abrirCrise()" style="padding:8px 14px;background:#FAECE7;color:#993C1D;border:0.5px solid #F5C4B3;border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--font)">
+        🚨 Crise
+      </button>
+      <a href="/rotinas/{{ crianca.id }}" style="padding:8px 14px;background:var(--bg2);color:var(--text);border:0.5px solid var(--border);border-radius:8px;font-size:13px;text-decoration:none">
+        ← Voltar
+      </a>
+    </div>
+  </div>
+
+  <!-- PROGRESSO -->
+  <div style="margin-bottom:1.5rem">
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+      <span style="color:var(--text2)">Progresso de hoje</span>
+      <span id="prog-txt" style="font-weight:500;color:#1D9E75">0 / {{ atividades|length }}</span>
+    </div>
+    <div class="progresso-bar">
+      <div class="progresso-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- ATIVIDADE ATIVA (timer) -->
+  <div id="painel-timer" class="card" style="text-align:center;padding:1.5rem;margin-bottom:1.5rem;display:none">
+    <div id="timer-nome" style="font-size:18px;font-weight:500;margin-bottom:1rem"></div>
+    <div class="timer-ring">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="60" fill="none" stroke="var(--bg2)" stroke-width="10"/>
+        <circle id="timer-arco" cx="70" cy="70" r="60" fill="none"
+          stroke="#0F6E56" stroke-width="10"
+          stroke-dasharray="377" stroke-dashoffset="0"
+          stroke-linecap="round"/>
+      </svg>
+      <div class="num" id="timer-num">--:--</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="pausarTimer()" id="btn-pausar" class="btn-grande" style="background:var(--bg2);color:var(--text);max-width:140px">
+        ⏸ Pausar
+      </button>
+      <button onclick="concluirAtual()" class="btn-grande" style="background:#1D9E75;color:white;max-width:200px">
+        ✓ Concluir
+      </button>
+    </div>
+  </div>
+
+  <!-- GRADE DE ATIVIDADES -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+    {% for a in atividades %}
+    <div class="atv-card"
+         id="atv-{{ a.id }}"
+         data-id="{{ a.id }}"
+         data-nome="{{ a.nome }}"
+         data-icone="{{ a.icone }}"
+         data-duracao="{{ a.duracao_min }}"
+         data-cor="{{ a.cor }}"
+         onclick="selecionarAtividade(this)"
+         style="--cor-atv:{{ a.cor }};--cor-atv-bg:{{ a.cor }}22">
+
+      {% if registros.get(a.id) == 'concluida' %}
+      <div class="check-badge">✓</div>
+      {% endif %}
+
+      <span class="atv-icone">{{ a.icone }}</span>
+      <div class="atv-nome">{{ a.nome }}</div>
+      <div class="atv-tempo">⏱ {{ a.duracao_min }} min</div>
+
+      <div style="margin-top:8px;display:flex;gap:4px;justify-content:center">
+        {% if registros.get(a.id) == 'concluida' %}
+          <span style="font-size:11px;background:#E1F5EE;color:#0F6E56;padding:2px 8px;border-radius:100px">Concluída</span>
+        {% elif registros.get(a.id) == 'pulada' %}
+          <span style="font-size:11px;background:var(--bg2);color:var(--text2);padding:2px 8px;border-radius:100px">Pulada</span>
+        {% else %}
+          <span style="font-size:11px;background:var(--bg2);color:var(--text2);padding:2px 8px;border-radius:100px">Pendente</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- PARABÉNS -->
+  <div id="parabens" style="display:none;text-align:center;padding:2rem">
+    <div style="font-size:64px;margin-bottom:1rem">🎉</div>
+    <div style="font-size:22px;font-weight:600;color:#0F6E56;margin-bottom:8px">Parabéns, {{ crianca.nome }}!</div>
+    <div style="font-size:15px;color:var(--text2);margin-bottom:1.5rem">Você completou todas as atividades de hoje!</div>
+    <a href="/rotinas/{{ crianca.id }}" class="btn btn-primary" style="font-size:15px;padding:14px 28px">
+      ✓ Finalizar rotina
+    </a>
+  </div>
+</div>
+
+<script>
+const ROTINA_ID = {{ rotina.id }};
+let ativAtual  = null;
+let timerInt   = null;
+let segundosRestantes = 0;
+let totalSegundos = 0;
+let pausado = false;
+
+// Estado inicial
+const estados = {
+  {% for a in atividades %}
+  {{ a.id }}: '{{ registros.get(a.id, "pendente") }}',
+  {% endfor %}
+};
+
+function selecionarAtividade(el) {
+  const id   = parseInt(el.dataset.id);
+  if (estados[id] === 'concluida') return;
+
+  // Limpar ativa anterior
+  document.querySelectorAll('.atv-card.ativa').forEach(c => c.classList.remove('ativa'));
+
+  if (ativAtual === id) {
+    // Clicar de novo — desselecionar
+    ativAtual = null;
+    pararTimer();
+    document.getElementById('painel-timer').style.display = 'none';
+    return;
+  }
+
+  ativAtual = id;
+  el.classList.add('ativa');
+  iniciarTimer(el);
+}
+
+function iniciarTimer(el) {
+  pararTimer();
+  pausado = false;
+  document.getElementById('btn-pausar').textContent = '⏸ Pausar';
+
+  const minutos = parseInt(el.dataset.duracao);
+  totalSegundos = minutos * 60;
+  segundosRestantes = totalSegundos;
+
+  document.getElementById('timer-nome').textContent = el.dataset.icone + ' ' + el.dataset.nome;
+  document.getElementById('painel-timer').style.display = 'block';
+  atualizarTimer();
+
+  timerInt = setInterval(() => {
+    if (!pausado) {
+      segundosRestantes--;
+      atualizarTimer();
+      if (segundosRestantes <= 0) {
+        pararTimer();
+        concluirAtual();
+      }
+    }
+  }, 1000);
+}
+
+function atualizarTimer() {
+  const m = Math.floor(segundosRestantes / 60);
+  const s = segundosRestantes % 60;
+  document.getElementById('timer-num').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+  const pct    = (totalSegundos - segundosRestantes) / totalSegundos;
+  const circ   = 2 * Math.PI * 60;
+  const offset = circ * (1 - pct);
+  document.getElementById('timer-arco').style.strokeDashoffset = offset;
+}
+
+function pausarTimer() {
+  pausado = !pausado;
+  document.getElementById('btn-pausar').textContent = pausado ? '▶ Continuar' : '⏸ Pausar';
+}
+
+function pararTimer() {
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+}
+
+async function concluirAtual() {
+  if (!ativAtual) return;
+  pararTimer();
+  const id = ativAtual;
+  ativAtual = null;
+
+  await fetch('/rotinas/api/concluir/' + id, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({status: 'concluida'})
+  }).then(r => r.json()).then(d => {
+    estados[id] = 'concluida';
+    const card = document.getElementById('atv-' + id);
+    card.classList.remove('ativa');
+    card.classList.add('concluida');
+    card.querySelector('div:last-child').innerHTML =
+      '<span style="font-size:11px;background:#E1F5EE;color:#0F6E56;padding:2px 8px;border-radius:100px">Concluída</span>';
+
+    // Badge check
+    if (!card.querySelector('.check-badge')) {
+      const badge = document.createElement('div');
+      badge.className = 'check-badge';
+      badge.textContent = '✓';
+      card.appendChild(badge);
+    }
+
+    atualizarProgresso(d.concluidas, d.total);
+  });
+
+  document.getElementById('painel-timer').style.display = 'none';
+}
+
+function atualizarProgresso(concluidas, total) {
+  const pct = total > 0 ? Math.round(concluidas/total*100) : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-txt').textContent = concluidas + ' / ' + total;
+  if (concluidas === total && total > 0) {
+    document.getElementById('parabens').style.display = 'block';
+    document.getElementById('parabens').scrollIntoView({behavior:'smooth'});
+  }
+}
+
+// Modo crise
+function abrirCrise() {
+  document.getElementById('modo-crise').style.display = 'flex';
+  pararTimer();
+  let fase = 0;
+  const fases = ['Inspira...', 'Segura...', 'Expira...', 'Segura...'];
+  document.getElementById('crise-txt').textContent = fases[0];
+  window._criseInt = setInterval(() => {
+    fase = (fase + 1) % fases.length;
+    document.getElementById('crise-txt').textContent = fases[fase];
+  }, 2000);
+}
+
+function fecharCrise() {
+  document.getElementById('modo-crise').style.display = 'none';
+  clearInterval(window._criseInt);
+}
+
+// Progresso inicial
+window.onload = function() {
+  const concluidas = Object.values(estados).filter(s => s === 'concluida').length;
+  const total = Object.keys(estados).length;
+  atualizarProgresso(concluidas, total);
+};
+</script>
+{% endblock %}

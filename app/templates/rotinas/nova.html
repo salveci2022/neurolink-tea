@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Nova Rotina — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navegação</div>
+      <a href="/rotinas/{{ crianca.id }}" class="sidebar-link"><span class="sidebar-icon">📅</span> Rotinas</a>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Início</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">+ Nova Rotina</div>
+      <div class="page-sub">Para {{ crianca.nome }}</div>
+    </div>
+    <div class="card" style="max-width:560px">
+      <form method="POST">
+        <div style="margin-bottom:1.2rem">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.03em">NOME DA ROTINA *</label>
+          <input type="text" name="nome" placeholder="Ex: Rotina da Manhã, Rotina Escolar..." required
+            style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font)">
+        </div>
+        <div style="margin-bottom:1.5rem">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;letter-spacing:.03em">DIAS DA SEMANA</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            {% for val, label in [('1','Seg'),('2','Ter'),('3','Qua'),('4','Qui'),('5','Sex'),('6','Sáb'),('7','Dom')] %}
+            <label style="cursor:pointer">
+              <input type="checkbox" name="dias" value="{{ val }}" {% if val in ['1','2','3','4','5'] %}checked{% endif %} style="display:none" class="dia-check">
+              <div class="dia-btn" style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;font-weight:500;transition:all .15s;{% if val in ['1','2','3','4','5'] %}background:var(--teal);color:white;border-color:var(--teal);{% endif %}">
+                {{ label }}
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-primary" style="flex:1">Criar rotina →</button>
+          <a href="/rotinas/{{ crianca.id }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.dia-check').forEach(cb => {
+  cb.addEventListener('change', () => {
+    const btn = cb.nextElementSibling;
+    if (cb.checked) {
+      btn.style.background='var(--teal)';
+      btn.style.color='white';
+      btn.style.borderColor='var(--teal)';
+    } else {
+      btn.style.background='';
+      btn.style.color='';
+      btn.style.borderColor='var(--border)';
+    }
+  });
+});
+</script>
+{% endblock %}

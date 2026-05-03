@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Editar {{ rotina.nome }} — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Ações</div>
+      <a href="/rotinas/executar/{{ rotina.id }}" class="sidebar-link" style="color:var(--teal);font-weight:500"><span class="sidebar-icon">▶</span> Iniciar rotina</a>
+      <a href="/rotinas/{{ crianca.id }}" class="sidebar-link"><span class="sidebar-icon">📅</span> Todas as rotinas</a>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Início</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Ícones sugeridos</div>
+      <div style="padding:6px 10px;font-size:18px;line-height:2.2;word-break:break-all">
+        🌅🛁🪥👕👖👟🍳🥣🧃🎒📚✏️🎮🎨🏃🧘🛏️🌙🍽️🚿🧹📺🎵🌳🐕🏫🚌🍎💊🧸
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="page-title">✏️ {{ rotina.nome }}</div>
+        <div class="page-sub">{{ crianca.nome }} · {{ atividades|length }} atividade(s)</div>
+      </div>
+      <a href="/rotinas/executar/{{ rotina.id }}" class="btn btn-primary">▶ Iniciar agora</a>
+    </div>
+
+    <!-- LISTA DE ATIVIDADES -->
+    {% if atividades %}
+    <div style="display:grid;gap:8px;margin-bottom:1.5rem">
+      {% for a in atividades %}
+      <div style="background:var(--bg);border:0.5px solid var(--border);border-left:4px solid {{ a.cor }};border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px;width:40px;text-align:center">{{ a.icone }}</div>
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:14px">{{ a.nome }}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">
+            ⏱️ {{ a.duracao_min }} min
+            &nbsp;·&nbsp;
+            🔔 Aviso {{ a.aviso_min }} min antes
+          </div>
+        </div>
+        <form method="POST" style="margin:0" onsubmit="return confirm('Remover esta atividade?')">
+          <input type="hidden" name="acao" value="del_atividade">
+          <input type="hidden" name="atividade_id" value="{{ a.id }}">
+          <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px">🗑️</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center;padding:2rem;margin-bottom:1.5rem">
+      <div style="font-size:48px;margin-bottom:8px">➕</div>
+      <p style="color:var(--text2)">Adicione a primeira atividade abaixo</p>
+    </div>
+    {% endif %}
+
+    <!-- FORMULÁRIO NOVA ATIVIDADE -->
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:500;margin-bottom:1rem">+ Adicionar atividade</h3>
+      <form method="POST">
+        <input type="hidden" name="acao" value="add_atividade">
+
+        <div style="display:grid;grid-template-columns:1fr 80px;gap:10px;margin-bottom:1rem">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px">NOME DA ATIVIDADE *</label>
+            <input type="text" name="nome" placeholder="Ex: Tomar banho, Café da manhã..." required
+              style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font)">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px">ÍCONE</label>
+            <input type="text" name="icone" value="⭐" maxlength="4"
+              style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:20px;text-align:center;font-family:var(--font)">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px">COR</label>
+            <input type="color" name="cor" value="#0F6E56"
+              style="width:100%;height:42px;border:0.5px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px">DURAÇÃO (min)</label>
+            <input type="number" name="duracao_min" value="10" min="1" max="120"
+              style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font)">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px">AVISO (min antes)</label>
+            <input type="number" name="aviso_min" value="5" min="1" max="30"
+              style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font)">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+          + Adicionar atividade
+        </button>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}

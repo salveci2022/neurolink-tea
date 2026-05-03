@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Rotinas de {{ crianca.nome }} — NeuroLink TEA{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navegação</div>
+      <a href="/dashboard/familia" class="sidebar-link"><span class="sidebar-icon">🏠</span> Início</a>
+      <a href="/rotinas" class="sidebar-link"><span class="sidebar-icon">📅</span> Rotinas</a>
+      <a href="/criancas/{{ crianca.id }}" class="sidebar-link"><span class="sidebar-icon">👶</span> Perfil</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">{{ crianca.nome }}</div>
+      <div style="padding:6px 10px;font-size:12px;color:var(--text2)">
+        {% if crianca.idade %}{{ crianca.idade }} anos · {% endif %}TEA nível {{ crianca.nivel_tea or '?' }}
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="page-title">📅 Rotinas de {{ crianca.nome }}</div>
+        <div class="page-sub">{{ rotinas|length }} rotina(s) cadastrada(s)</div>
+      </div>
+      <a href="/rotinas/{{ crianca.id }}/nova" class="btn btn-primary">+ Nova rotina</a>
+    </div>
+
+    {% if not rotinas %}
+    <div class="card" style="text-align:center;padding:3rem">
+      <div style="font-size:64px;margin-bottom:1rem">🌅</div>
+      <h3 style="margin-bottom:8px">Nenhuma rotina ainda</h3>
+      <p style="color:var(--text2);margin-bottom:1.5rem">Crie a primeira rotina de {{ crianca.nome }}!</p>
+      <a href="/rotinas/{{ crianca.id }}/nova" class="btn btn-primary">+ Criar primeira rotina</a>
+    </div>
+    {% else %}
+    <div style="display:grid;gap:12px">
+      {% for r in rotinas %}
+      <div class="card" style="padding:1.2rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-weight:500;font-size:16px;margin-bottom:4px">{{ r.nome }}</div>
+            <div style="font-size:12px;color:var(--text2)">
+              {% set dias_map = {'1':'Seg','2':'Ter','3':'Qua','4':'Qui','5':'Sex','6':'Sáb','7':'Dom'} %}
+              {% for d in r.dias_semana.split(',') %}
+                <span style="background:var(--teal-light);color:var(--teal);padding:2px 8px;border-radius:100px;font-size:11px;margin-right:3px">{{ dias_map.get(d,d) }}</span>
+              {% endfor %}
+              · {{ r.atividades.count() }} atividade(s)
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <a href="/rotinas/executar/{{ r.id }}" class="btn btn-primary" style="font-size:13px">▶ Iniciar</a>
+            <a href="/rotinas/editar/{{ r.id }}" class="btn btn-secondary" style="font-size:13px">✏️ Editar</a>
+          </div>
+        </div>
+
+        {% if r.atividades.count() > 0 %}
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          {% for a in r.atividades.order_by('ordem').limit(6).all() %}
+          <div style="background:{{ a.cor }}22;border:1.5px solid {{ a.cor }};border-radius:10px;padding:6px 10px;text-align:center;min-width:60px">
+            <div style="font-size:20px">{{ a.icone }}</div>
+            <div style="font-size:10px;color:var(--text2);margin-top:2px">{{ a.nome[:10] }}</div>
+            <div style="font-size:10px;color:var(--text2)">{{ a.duracao_min }}min</div>
+          </div>
+          {% endfor %}
+          {% if r.atividades.count() > 6 %}
+          <div style="background:var(--bg2);border-radius:10px;padding:6px 10px;text-align:center;min-width:60px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:12px;color:var(--text2)">+{{ r.atividades.count()-6 }} mais</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}
