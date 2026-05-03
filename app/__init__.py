@@ -44,6 +44,7 @@ def create_app(config_name='default'):
     from app.routes.rotinas   import rotinas_bp
     from app.routes.gps       import gps_bp
     from app.routes.clinica   import clinica_bp
+    from app.routes.comunicador import comunicador_bp
     from app.routes.ia        import ia_bp
     from app.routes.admin     import admin_bp
     from app.routes.api       import api_bp
@@ -54,6 +55,7 @@ def create_app(config_name='default'):
     app.register_blueprint(rotinas_bp,   url_prefix='/rotinas')
     app.register_blueprint(gps_bp,       url_prefix='/gps')
     app.register_blueprint(clinica_bp,   url_prefix='/clinica')
+    app.register_blueprint(comunicador_bp, url_prefix='/comunicador')
     app.register_blueprint(ia_bp,        url_prefix='/ia')
     app.register_blueprint(admin_bp,     url_prefix='/admin')
     app.register_blueprint(api_bp,       url_prefix='/api/v1')

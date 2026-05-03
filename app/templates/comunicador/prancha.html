@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Comunicador — {{ crianca.nome }}</title>
+<style>
+:root{
+  --teal:#0F6E56;--teal-light:#E1F5EE;--teal-mid:#1D9E75;
+  --bg:#fff;--bg2:#f8f7f3;--text:#1a1a18;--text2:#5F5E5A;
+  --border:rgba(0,0,0,0.08);--font:-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg2);min-height:100vh;user-select:none}
+
+/* HEADER */
+.header{background:var(--teal);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-nome{font-size:15px;font-weight:600;color:white}
+.header-back{color:rgba(255,255,255,.8);text-decoration:none;font-size:13px;padding:6px 12px;background:rgba(255,255,255,.15);border-radius:8px}
+
+/* FRASE CONSTRUÍDA */
+.frase-box{background:var(--bg);border-bottom:2px solid var(--teal);padding:12px 16px;min-height:70px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:57px;z-index:40}
+.frase-chip{display:inline-flex;align-items:center;gap:6px;background:var(--teal-light);border:1.5px solid var(--teal);border-radius:100px;padding:6px 14px;font-size:14px;font-weight:500;color:var(--teal);animation:popIn .2s ease}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.frase-vazia{font-size:14px;color:var(--text2);font-style:italic}
+
+/* BOTÕES DE AÇÃO */
+.acoes{display:flex;gap:8px;padding:10px 16px;background:var(--bg);border-bottom:0.5px solid var(--border)}
+.btn-acao{flex:1;padding:10px 8px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.btn-acao:hover{opacity:.85}
+.btn-falar{background:var(--teal);color:white;flex:2}
+.btn-limpar{background:#FAECE7;color:#993C1D;border:0.5px solid #F5C4B3}
+.btn-apagar{background:var(--bg2);color:var(--text);border:0.5px solid var(--border)}
+
+/* CATEGORIAS TABS */
+.tabs{display:flex;gap:0;overflow-x:auto;background:var(--bg);border-bottom:0.5px solid var(--border);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 16px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;transition:all .15s;flex-shrink:0}
+.tab.ativo{color:var(--teal);border-bottom-color:var(--teal);background:var(--teal-light)}
+.tab:hover{background:var(--bg2)}
+
+/* GRADE DE PICTOGRAMAS */
+.prancha{padding:12px 10px 80px}
+.categoria-grid{display:none;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px}
+.categoria-grid.ativa{display:grid}
+
+.pict{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.pict:active{transform:scale(.93);background:var(--teal-light);border-color:var(--teal)}
+.pict:hover{border-color:var(--teal);background:var(--teal-light)}
+.pict-emoji{font-size:38px;display:block;margin-bottom:6px;line-height:1}
+.pict-label{font-size:11px;font-weight:500;color:var(--text);line-height:1.2}
+
+/* MODO RÁPIDO */
+.modo-rapido{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:0.5px solid var(--border);padding:8px 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.modo-rapido::-webkit-scrollbar{display:none}
+.btn-rapido{flex-shrink:0;background:var(--teal-light);border:1.5px solid var(--teal);border-radius:100px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--teal);cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-rapido:active{background:var(--teal);color:white}
+
+/* FEEDBACK VISUAL */
+.feedback{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(15,110,86,.95);color:white;padding:16px 28px;border-radius:16px;font-size:16px;font-weight:500;text-align:center;z-index:999;display:none;animation:popIn .3s ease;max-width:80vw}
+</style>
+</head>
+<body>
+
+<!-- FEEDBACK -->
+<div class="feedback" id="feedback"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <a href="/comunicador" class="header-back">← Voltar</a>
+  <div class="header-nome">💬 {{ crianca.nome }}</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.6)">CAA</div>
+</div>
+
+<!-- FRASE CONSTRUÍDA -->
+<div class="frase-box" id="frase-box">
+  <span class="frase-vazia" id="frase-vazia">Toque nos pictogramas para falar...</span>
+</div>
+
+<!-- BOTÕES DE AÇÃO -->
+<div class="acoes">
+  <button class="btn-acao btn-falar" onclick="falarFrase()">🔊 Falar tudo</button>
+  <button class="btn-acao btn-apagar" onclick="apagarUltimo()">⌫</button>
+  <button class="btn-acao btn-limpar" onclick="limparFrase()">🗑️ Limpar</button>
+</div>
+
+<!-- TABS DE CATEGORIAS -->
+<div class="tabs" id="tabs">
+  {% for cat_id, cat_label in categorias.items() %}
+  <div class="tab {% if loop.first %}ativo{% endif %}"
+       onclick="trocarCategoria('{{ cat_id }}', this)">
+    {{ cat_label }}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- PRANCHAS -->
+<div class="prancha">
+  {% for cat_id, pics in pictogramas.items() %}
+  <div class="categoria-grid {% if loop.first %}ativa{% endif %}" id="cat-{{ cat_id }}">
+    {% for p in pics %}
+    <div class="pict"
+         onclick="adicionarPalavra('{{ p.label }}', '{{ p.frase }}', '{{ p.emoji }}', this)">
+      <span class="pict-emoji">{{ p.emoji }}</span>
+      <div class="pict-label">{{ p.label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- MODO RÁPIDO (frases prontas) -->
+<div class="modo-rapido">
+  <button class="btn-rapido" onclick="frasePronta('Quero água! 💧')">💧 Água</button>
+  <button class="btn-rapido" onclick="frasePronta('Quero comer! 🍽️')">🍽️ Comer</button>
+  <button class="btn-rapido" onclick="frasePronta('Preciso ir ao banheiro! 🚽')">🚽 Banheiro</button>
+  <button class="btn-rapido" onclick="frasePronta('Estou com dor! 🤕')">🤕 Dor</button>
+  <button class="btn-rapido" onclick="frasePronta('Preciso de ajuda! 🙋')">🙋 Ajuda</button>
+  <button class="btn-rapido" onclick="frasePronta('Não quero! ❌')">❌ Não</button>
+  <button class="btn-rapido" onclick="frasePronta('Sim, quero! ✅')">✅ Sim</button>
+  <button class="btn-rapido" onclick="frasePronta('Quero um abraço! 🤗')">🤗 Abraço</button>
+</div>
+
+<script>
+// Estado da frase
+let fraseItems = []; // [{label, frase, emoji}]
+
+// Síntese de voz
+const synth = window.speechSynthesis;
+
+function falar(texto) {
+  if (!synth) return;
+  synth.cancel();
+  const utter = new SpeechSynthesisUtterance(texto);
+  utter.lang = 'pt-BR';
+  utter.rate = 0.9;
+  utter.pitch = 1.1;
+  // Tentar voz feminina em pt-BR
+  const vozes = synth.getVoices();
+  const voz = vozes.find(v => v.lang.includes('pt') && v.name.toLowerCase().includes('female'))
+    || vozes.find(v => v.lang.includes('pt-BR'))
+    || vozes.find(v => v.lang.includes('pt'));
+  if (voz) utter.voice = voz;
+  synth.speak(utter);
+}
+
+function adicionarPalavra(label, frase, emoji, el) {
+  // Feedback visual
+  el.style.background = 'var(--teal)';
+  el.style.borderColor = 'var(--teal)';
+  el.querySelector('.pict-emoji').style.transform = 'scale(1.2)';
+  setTimeout(() => {
+    el.style.background = '';
+    el.style.borderColor = '';
+    el.querySelector('.pict-emoji').style.transform = '';
+  }, 300);
+
+  fraseItems.push({label, frase, emoji});
+  renderFrase();
+
+  // Falar a palavra isolada
+  falar(label);
+}
+
+function renderFrase() {
+  const box = document.getElementById('frase-box');
+  const vazia = document.getElementById('frase-vazia');
+
+  if (fraseItems.length === 0) {
+    box.innerHTML = '<span class="frase-vazia" id="frase-vazia">Toque nos pictogramas para falar...</span>';
+    return;
+  }
+
+  box.innerHTML = fraseItems.map((item, i) =>
+    `<div class="frase-chip" onclick="removerItem(${i})">
+      ${item.emoji} ${item.label} <span style="opacity:.5;font-size:12px;margin-left:2px">×</span>
+    </div>`
+  ).join('');
+}
+
+function removerItem(idx) {
+  fraseItems.splice(idx, 1);
+  renderFrase();
+}
+
+function apagarUltimo() {
+  fraseItems.pop();
+  renderFrase();
+}
+
+function limparFrase() {
+  fraseItems = [];
+  renderFrase();
+  synth && synth.cancel();
+}
+
+function falarFrase() {
+  if (fraseItems.length === 0) {
+    mostrarFeedback('Nenhuma palavra selecionada!');
+    return;
+  }
+  // Montar frase completa
+  const texto = fraseItems.map(i => i.label).join(', ');
+  falar(texto);
+  mostrarFeedback('🔊 ' + texto);
+}
+
+function frasePronta(texto) {
+  falar(texto);
+  mostrarFeedback('🔊 ' + texto);
+}
+
+function trocarCategoria(id, el) {
+  document.querySelectorAll('.categoria-grid').forEach(g => g.classList.remove('ativa'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('ativo'));
+  document.getElementById('cat-' + id).classList.add('ativa');
+  el.classList.add('ativo');
+  el.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+
+function mostrarFeedback(msg) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(window._fbTimer);
+  window._fbTimer = setTimeout(() => { el.style.display = 'none'; }, 2000);
+}
+
+// Carregar vozes quando disponíveis
+if (synth) {
+  synth.onvoiceschanged = () => synth.getVoices();
+  setTimeout(() => synth.getVoices(), 500);
+}
+</script>
+</body>
+</html>
